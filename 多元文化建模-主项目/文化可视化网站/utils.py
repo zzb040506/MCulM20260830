@@ -40,9 +40,15 @@ def load_item_meta():
 
 @st.cache_data
 def load_theory():
+    # 优先用打包的 parquet（云端部署/无 Excel 时）；
+    # 本地开发回退到原 Excel（保留 openpyxl 行为）。
+    pq = os.path.join(DATA, "theory.parquet")
+    if os.path.exists(pq):
+        return pd.read_parquet(pq)
     import openpyxl
-    BASE = "/Users/f.fantasiachopin/Documents/UCAS博士文件夹/Project/多元文化建模20260830/多元文化建模-主项目"
-    wb = openpyxl.load_workbook(os.path.join(BASE, "国家文化知识建模_中层理论注册表.xlsx"), data_only=True)
+    PARENT = os.path.dirname(HERE)  # 多元文化建模-主项目
+    xlsx = os.path.join(PARENT, "国家文化知识建模_中层理论注册表.xlsx")
+    wb = openpyxl.load_workbook(xlsx, data_only=True)
     ws = wb.active
     h = [c.value for c in ws[1]]
     rows = [dict(zip(h, r)) for r in ws.iter_rows(min_row=2, values_only=True)]

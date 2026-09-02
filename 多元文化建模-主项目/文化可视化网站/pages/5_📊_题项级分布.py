@@ -29,28 +29,21 @@ qsel = st.selectbox("选择题项 Select item",
 qrow = content_q[content_q["variable"]==qsel].iloc[0]
 st.markdown(f"**题项**：`{qsel}`　|　**命题**：{question_text(qsel)}　|　**编码**：{qrow['J_code']} / {qrow['D_primary']}")
 
-# 读取该题原始分布（需重新读WVS该列）
+# 读取该题原始分布：从打包的 item_raw.parquet 取列（云端无需 200MB WVS CSV）
+@st.cache_data
+def _load_item_raw_table():
+    return pd.read_parquet(os.path.join(HERE, "data", "item_raw.parquet"))
+
 @st.cache_data
 def load_item_raw(qid, _im):
-    import openpyxl, csv
-    BASE = "/Users/f.fantasiachopin/Documents/UCAS博士文件夹/Project/多元文化建模20260830"
-    WVS_CSV = os.path.join(BASE, "WVS-7数据集", "WVS_Cross-National_Wave_7_inverted_csv_v6_0.csv")
+    raw_all = _load_item_raw_table()
     row = _im[_im["variable"]==qid].iloc[0]
     wcol = row["wvs_col"]
-    need = ["B_COUNTRY_ALPHA","Q260","Q262","Q275R","Q288R", wcol]
-    out = []
-    with open(WVS_CSV) as f:
-        r = csv.DictReader(f)
-        for rec in r:
-            v = rec.get(wcol,"")
-            try: v = float(v)
-            except: v = np.nan
-            out.append({"country":rec["B_COUNTRY_ALPHA"], "sex":rec["Q260"],
-                        "age":rec["Q262"], "edu":rec["Q275R"], "income":rec["Q288R"], "val":v})
-    df = pd.DataFrame(out)
-    df["val"] = pd.to_numeric(df["val"], errors="coerce")
-    df.loc[df["val"]<0, "val"] = np.nan
-    return df
+    sub = raw_all[["country","sex","age","edu","income", wcol]].copy()
+    sub = sub.rename(columns={wcol: "val"})
+    sub["val"] = pd.to_numeric(sub["val"], errors="coerce")
+    sub.loc[sub["val"]<0, "val"] = np.nan
+    return sub
 
 raw = load_item_raw(qsel, im)
 # 应用人口学筛选（demo值→WVS原始码）

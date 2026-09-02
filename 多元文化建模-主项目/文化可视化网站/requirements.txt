@@ -1,0 +1,7 @@
+streamlit>=1.30
+pandas>=2.0
+numpy>=1.24
+plotly>=5.18
+pyarrow>=14.0
+# openpyxl 仅本地回退用（theory 已打包为 parquet）；云端可不装
+openpyxl>=3.1
