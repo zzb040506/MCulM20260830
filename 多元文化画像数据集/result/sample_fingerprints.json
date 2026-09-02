@@ -1,0 +1,171 @@
+[
+  {
+    "input": {
+      "country": "CHN",
+      "sex": 1,
+      "age": 28,
+      "edu_isced": 5,
+      "income_level": 7,
+      "urban": 1
+    },
+    "prototype_distribution": {
+      "P5_传统宗教型1": 1.0
+    },
+    "main_prototype": {
+      "id": 5,
+      "name": "传统宗教型1"
+    },
+    "main_prototype_prob": 1.0,
+    "value_vector": {
+      "SACSECVAL": 0.3875,
+      "RESEMAVAL": 0.3857,
+      "AUTONOMY": 0.6667,
+      "EQUALITY": 0.5533,
+      "I_AUTHORITY": 0.0,
+      "I_NATIONALISM": 0.33,
+      "I_DEVOUT": 0.33,
+      "trust_foreign": 0.6667,
+      "ethical_flexibility": 0.2211,
+      "exclusion_index": 0.4444,
+      "context_flexibility": 1.0
+    },
+    "nearest_neighbors": [
+      "CHN(中国)",
+      "USA(美国)",
+      "CYP(塞浦路斯)",
+      "UKR(乌克兰)",
+      "KAZ(哈萨克斯坦)"
+    ],
+    "adaptation_advice": [
+      "权力距离(低): 直接、平等、可挑战性",
+      "开放度(高): 可用跨文化例子",
+      "伦理弹性(低): 严格规则、明确边界"
+    ]
+  },
+  {
+    "input": {
+      "country": "JPN",
+      "sex": 2,
+      "age": 45,
+      "edu_isced": 4,
+      "income_level": 6
+    },
+    "prototype_distribution": {
+      "P1_个人表达型1": 1.0
+    },
+    "main_prototype": {
+      "id": 1,
+      "name": "个人表达型1"
+    },
+    "main_prototype_prob": 1.0,
+    "value_vector": {
+      "SACSECVAL": 0.4292,
+      "RESEMAVAL": 0.5505,
+      "AUTONOMY": 0.6667,
+      "EQUALITY": 0.6067,
+      "I_AUTHORITY": 1.0,
+      "I_NATIONALISM": 0.33,
+      "I_DEVOUT": 0.33,
+      "trust_foreign": 0.6667,
+      "ethical_flexibility": 0.3,
+      "exclusion_index": 0.3333,
+      "context_flexibility": 1.0
+    },
+    "nearest_neighbors": [
+      "JPN(日本)",
+      "URY(乌拉圭)",
+      "DEU(德国)",
+      "THA(泰国)",
+      "GBR(英国)"
+    ],
+    "adaptation_advice": [
+      "权力距离(高): 礼貌、间接、尊重层级",
+      "开放度(高): 可用跨文化例子",
+      "伦理弹性(低): 严格规则、明确边界"
+    ]
+  },
+  {
+    "input": {
+      "country": "EGY",
+      "sex": 1,
+      "age": 35,
+      "edu_isced": 3,
+      "income_level": 4
+    },
+    "prototype_distribution": {
+      "P12_传统宗教型2": 0.9998
+    },
+    "main_prototype": {
+      "id": 12,
+      "name": "传统宗教型2"
+    },
+    "main_prototype_prob": 0.9998,
+    "value_vector": {
+      "SACSECVAL": 0.1454,
+      "RESEMAVAL": 0.2304,
+      "AUTONOMY": 0.3333,
+      "EQUALITY": 0.3333,
+      "I_AUTHORITY": 0.0,
+      "I_NATIONALISM": 0.33,
+      "I_DEVOUT": 0.0,
+      "trust_foreign": 0.6667,
+      "ethical_flexibility": 0.2267,
+      "exclusion_index": 0.5,
+      "context_flexibility": 1.0
+    },
+    "nearest_neighbors": [
+      "LBY(利比亚)",
+      "EGY(埃及)",
+      "MDV(马尔代夫)",
+      "TUR(土耳其)",
+      "ARM(亚美尼亚)"
+    ],
+    "adaptation_advice": [
+      "权力距离(低): 直接、平等、可挑战性",
+      "开放度(高): 可用跨文化例子",
+      "伦理弹性(低): 严格规则、明确边界"
+    ]
+  },
+  {
+    "input": {
+      "country": "DEU",
+      "sex": 2,
+      "age": 32,
+      "edu_isced": 5,
+      "income_level": 7
+    },
+    "prototype_distribution": {
+      "P12_传统宗教型2": 1.0
+    },
+    "main_prototype": {
+      "id": 12,
+      "name": "传统宗教型2"
+    },
+    "main_prototype_prob": 1.0,
+    "value_vector": {
+      "SACSECVAL": 0.3733,
+      "RESEMAVAL": 0.6883,
+      "AUTONOMY": 0.6667,
+      "EQUALITY": 0.8033,
+      "I_AUTHORITY": 0.0,
+      "I_NATIONALISM": 0.33,
+      "I_DEVOUT": 0.33,
+      "trust_foreign": 0.3333,
+      "ethical_flexibility": 0.3526,
+      "exclusion_index": 0.2222,
+      "context_flexibility": 1.0
+    },
+    "nearest_neighbors": [
+      "LBY(利比亚)",
+      "EGY(埃及)",
+      "MDV(马尔代夫)",
+      "TUR(土耳其)",
+      "ARM(亚美尼亚)"
+    ],
+    "adaptation_advice": [
+      "权力距离(低): 直接、平等、可挑战性",
+      "开放度(低): 用本地化例子",
+      "伦理弹性(低): 严格规则、明确边界"
+    ]
+  }
+]

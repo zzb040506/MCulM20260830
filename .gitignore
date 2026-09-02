@@ -1,0 +1,72 @@
+# ===== 大数据集 / Large Raw Data =====
+# WVS-7 原始数据集（约 206MB），不进仓库
+WVS-7数据集/
+WVS-7数据集/*
+
+# 任何其它大型原始数据（CSV / ZIP / Parquet 原始文件）按需追加
+# 例如其它任意未处理大数据文件
+*.raw.csv
+*.zip
+
+# ===== Python 构建 / 缓存 =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# 虚拟环境
+.venv/
+venv/
+env/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# ===== 系统 / 编辑器 =====
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== 日志 / 临时文件 =====
+*.log
+logs/
+*.tmp
+*.bak
+*.cache
+
+# ===== 模型 / 二进制 =====
+*.pkl
+*.joblib

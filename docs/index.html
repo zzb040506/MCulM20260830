@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>多元文化建模 · 跨国文化图式可视化</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+  :root{--main:#2E5C8A;--acc:#C0504D;--bg:#fafafa;--card:#fff;--line:#e0e0e0;--txt:#222;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
+  header{background:linear-gradient(135deg,#2E5C8A,#3A8FB7);color:#fff;padding:18px 24px}
+  header h1{margin:0;font-size:22px}
+  header .sub{opacity:.9;font-size:12.5px;margin-top:4px}
+  #controls{background:#fff;border-bottom:1px solid var(--line);padding:10px 24px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;position:sticky;top:0;z-index:10}
+  .ctrl{display:flex;flex-direction:column;gap:4px;font-size:12px}
+  .ctrl label{font-weight:600;color:#555}
+  .chkrow{display:flex;flex-wrap:wrap;gap:6px}
+  .chkrow label{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;padding:2px 6px;border:1px solid var(--line);border-radius:10px;cursor:pointer}
+  .chkrow input{margin:0}
+  nav#tabs{display:flex;flex-wrap:wrap;gap:2px;padding:8px 24px;background:#eef3f8;border-bottom:1px solid var(--line)}
+  nav#tabs button{border:none;background:transparent;padding:8px 14px;cursor:pointer;border-radius:6px 6px 0 0;font-size:13.5px;color:#445}
+  nav#tabs button.active{background:var(--card);color:var(--main);font-weight:700;box-shadow:0 -1px 0 var(--main) inset}
+  main{padding:18px 24px 60px;max-width:1300px;margin:0 auto}
+  .section{display:none}
+  .section.active{display:block}
+  .desc{color:#666;font-size:12.5px;margin:6px 0 14px;line-height:1.6}
+  .plot{width:100%;border:1px solid var(--line);border-radius:6px;background:#fff;margin:10px 0}
+  select,input[type=radio]{font-size:12.5px}
+  .theory{border-left:3px solid var(--main);padding:10px 14px;margin:8px 0;background:#fff;border-radius:0 6px 6px 0}
+  .theory .tid{color:var(--main);font-weight:700;font-size:13px}
+  .theory .sec{color:#888;font-size:11.5px}
+  .theory .m{font-size:12.5px;margin-top:4px;color:#444}
+  table{border-collapse:collapse;width:100%;font-size:12.5px}
+  td,th{border:1px solid var(--line);padding:4px 8px;text-align:center}
+  th{background:#eef3f8;color:#334}
+  .muted{color:#888;font-size:11.5px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🌐 多元文化建模 · 跨国文化图式可视化</h1>
+  <div class="sub">WVS-7 · 66国 · 97,220受访者 · 290题编码体系 · Cultural Schema Visualization</div>
+</header>
+
+<div id="controls">
+  <div class="ctrl"><label>文化圈 Zone</label><div class="chkrow" id="zoneChk"></div></div>
+  <div class="ctrl"><label>维度集 Dimension</label><div class="chkrow">
+    <label><input type="radio" name="dk" value="D" checked> 场域 D</label>
+    <label><input type="radio" name="dk" value="J"> 判断 J</label>
+  </div></div>
+  <div class="ctrl"><label>人口学切片 Demographic</label><select id="sliceSel"></select></div>
+</div>
+
+<nav id="tabs">
+  <button data-tab="overview" class="active">总览 Overview</button>
+  <button data-tab="map">🌍 文化地图</button>
+  <button data-tab="radar">🛰️ 雷达对比</button>
+  <button data-tab="heat">🔥 热力图</button>
+  <button data-tab="country">🇨🇳 国家详情</button>
+  <button data-tab="item">📊 题项级</button>
+  <button data-tab="code">📐 编码体系</button>
+</nav>
+
+<main>
+  <section id="tab-overview" class="section active">
+    <div class="desc">总览：文化地图散点(Inglehart–Welzel) + 各文化圈维度均值。气泡=国家，大小=受访者数。</div>
+    <div id="ov_scatter" class="plot" style="height:560px"></div>
+    <div id="ov_bar" class="plot" style="height:420px"></div>
+  </section>
+  <section id="tab-map" class="section">
+    <div class="desc">文化地图：左=Inglehart–Welzel散点(Welzel两指数)；下=世界地图按选中指标着色。</div>
+    <select id="mapMetric" style="margin-bottom:8px">
+      <option value="welzel_secular">传统→世俗理性 Sacred→Secular</option>
+      <option value="welzel_emanc">生存→自我表达 Survival→Emancipative</option>
+    </select>
+    <div id="map_scatter" class="plot" style="height:600px"></div>
+    <div id="map_choropleth" class="plot" style="height:480px"></div>
+  </section>
+  <section id="tab-radar" class="section">
+    <div class="desc">国家雷达对比：多选国家(最多6)叠加在同一雷达上；下方为全66国小多图矩阵。</div>
+    <select id="radarSel" multiple size="8" style="width:100%;max-width:520px;margin-bottom:8px"></select>
+    <div id="radar_plot" class="plot" style="height:560px"></div>
+    <div id="radar_small" class="plot" style="height:1400px"></div>
+  </section>
+  <section id="tab-heat" class="section">
+    <div class="desc">国家×维度热力图(可切排序) + 文化圈×维度均值热力图 + 平行坐标。</div>
+    <select id="heatSort" style="margin:8px 0">
+      <option value="zone">按文化圈排序</option>
+      <option value="mean">按维度均值排序</option>
+      <option value="name">按名称排序</option>
+    </select>
+    <div id="heat_main" class="plot" style="height:780px"></div>
+    <div id="heat_zone" class="plot" style="height:320px"></div>
+    <div id="heat_parcoord" class="plot" style="height:520px"></div>
+  </section>
+  <section id="tab-country" class="section">
+    <div class="desc">国家详情：选一国 → 双雷达(D场域+J判断) + 在文化地图上的位置 + 维度分值表。</div>
+    <select id="countrySel" style="margin:8px 0"></select>
+    <div id="c_radar" class="plot" style="height:560px"></div>
+    <div id="c_pos" class="plot" style="height:460px"></div>
+    <div id="c_table"></div>
+  </section>
+  <section id="tab-item" class="section">
+    <div class="desc">题项级：选一道题 → 66国归一化均值条(按升序)；并关联可能支撑的中层理论。</div>
+    <select id="itemSel" style="margin:8px 0;width:100%;max-width:760px"></select>
+    <div id="item_bar" class="plot" style="height:760px"></div>
+    <div id="item_theory"></div>
+  </section>
+  <section id="tab-code" class="section">
+    <div class="desc">编码体系：各维度题项构成 + 34条中层理论注册表(可按板块筛选)。</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div id="code_j" class="plot" style="height:340px;flex:1;min-width:320px"></div>
+      <div id="code_d" class="plot" style="height:340px;flex:1;min-width:320px"></div>
+    </div>
+    <select id="codeSec" style="margin:14px 0 8px"></select>
+    <div id="code_theory"></div>
+  </section>
+</main>
+
+<script src="data.js"></script>
+<script>
+const D = window.APP_DATA;
+const STATE = {tab:'overview', slice:'all', dk:'D', zones:new Set(D.zones.map(z=>z.zone))};
+const ZCOLOR = {}; D.zones.forEach(z=>ZCOLOR[z.zone]=z.color);
+const ZEN = {}; D.zones.forEach(z=>ZEN[z.zone]=z.en);
+const DIM_LABEL = {};
+D.dimConfig.D.labels.forEach(o=>{for(let k in o)DIM_LABEL[k]=o[k]});
+D.dimConfig.J.labels.forEach(o=>{for(let k in o)DIM_LABEL[k]=o[k]});
+
+// 获取当前切片数据(按文化圈过滤)
+function getData(){
+  let recs = D.slices[STATE.slice] || D.slices['all'];
+  return recs.filter(r=>STATE.zones.has(r.zone));
+}
+function dimCols(kind){return kind==='D'?D.dimConfig.D.order:D.dimConfig.J.order;}
+function dimLabels(kind){return dimCols(kind).map(c=>DIM_LABEL[c]+' '+c);}
+
+// ========== 控件初始化 ==========
+function initControls(){
+  const zc = document.getElementById('zoneChk');
+  D.zones.forEach(z=>{
+    const lbl=document.createElement('label');
+    lbl.style.borderColor=z.color;
+    lbl.innerHTML=`<input type="checkbox" value="${z.zone}" checked><span style="color:${z.color}">●</span> ${z.zone}`;
+    lbl.querySelector('input').addEventListener('change',e=>{
+      if(e.target.checked)STATE.zones.add(z.zone);else STATE.zones.delete(z.zone);
+      render();
+    });
+    zc.appendChild(lbl);
+  });
+  const sl=document.getElementById('sliceSel');
+  const opts=[['all','全部 All'],['sex:男 Male','男 Male'],['sex:女 Female','女 Female'],
+    ['age:<30','<30'],['age:30-44','30-44'],['age:45-59','45-59'],['age:60+','60+'],
+    ['edu:低 Low','教育低'],['edu:中 Mid','教育中'],['edu:高 High','教育高'],
+    ['income:低 Low','收入低'],['income:中 Mid','收入中'],['income:高 High','收入高']];
+  opts.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;sl.appendChild(o);});
+  sl.addEventListener('change',e=>{STATE.slice=e.target.value;render();});
+  document.querySelectorAll('input[name=dk]').forEach(r=>r.addEventListener('change',e=>{STATE.dk=e.target.value;render();}));
+  document.querySelectorAll('#tabs button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('tab-'+b.dataset.tab).classList.add('active');
+    STATE.tab=b.dataset.tab;render();
+  }));
+  // 国家选择器
+  const rs=document.getElementById('radarSel');
+  const allC=[...new Set(D.slices.all.map(r=>r.iso3))].sort();
+  allC.forEach(c=>{
+    const o=document.createElement('option');o.value=c;o.textContent=rName(c)+' ('+c+')';rs.appendChild(o);
+  });
+  ['CHN','USA','JPN','DEU'].forEach(c=>{[...rs.options].forEach(o=>{if(o.value===c)o.selected=true;});});
+  rs.addEventListener('change',renderRadar);
+  const cs=document.getElementById('countrySel');
+  allC.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=rName(c)+' ('+c+')';cs.appendChild(o);});
+  cs.value='CHN';cs.addEventListener('change',renderCountry);
+  // 题项选择器
+  const is=document.getElementById('itemSel');
+  D.items.forEach(it=>{const o=document.createElement('option');o.value=it.variable;o.textContent=it.variable+' | '+(it.text||'').slice(0,40);is.appendChild(o);});
+  is.addEventListener('change',renderItem);
+  // 编码体系板块
+  const secs=['全部',...new Set(D.theories.map(t=>t.section))];
+  const css=document.getElementById('codeSec');
+  secs.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;css.appendChild(o);});
+  css.addEventListener('change',renderCode);
+}
+
+function rName(iso){const r=D.slices.all.find(x=>x.iso3===iso);return r?r.name_zh:iso;}
+
+// ========== 总览 ==========
+function renderOverview(){
+  const data=getData();
+  const tr={x:[],y:[],text:[],marker:{size:[],color:[],sizeref:1200,sizemode:'area',opacity:.7},mode:'markers+text',textposition:'top center',textfont:{size:8},
+    hovertemplate:'%{customdata.name}<br>世俗=%{x:.3f}<br>解放=%{y:.3f}<extra></extra>',customdata:[],type:'scatter'};
+  data.forEach(r=>{tr.x.push(r.welzel_secular);tr.y.push(r.welzel_emanc);tr.text.push(r.iso3);tr.marker.size.push(Math.max(8,r.n_resp/40));tr.marker.color.push(r.color);tr.customdata.push({name:r.name_zh});});
+  Plotly.newPlot('ov_scatter',[tr],{xaxis:{title:'传统→世俗 Sacred→Secular',range:[0.1,0.55]},yaxis:{title:'生存→自我表达 Survival→Emanc',range:[0.15,0.75]},
+    showlegend:false,margins:{t:20},plot_bgcolor:'#fff',font:{size:11}},{responsive:true});
+  // 文化圈均值条
+  const cols=dimCols(STATE.dk);const labs=dimLabels(STATE.dk);
+  const zones=[...STATE.zones];
+  const traces=zones.map(z=>({type:'bar',name:z,x:labs,y:cols.map(c=>{const rs=data.filter(r=>r.zone===z);return rs.length?rs.reduce((s,r)=>s+(r[c]||0),0)/rs.length:0;}),marker:{color:ZCOLOR[z]}}));
+  Plotly.newPlot('ov_bar',traces,{barmode:'group',xaxis:{tickangle:-25},margin:{t:10,b:90},font:{size:11}},{responsive:true});
+}
+
+// ========== 文化地图 ==========
+function renderMap(){
+  const data=getData();
+  const tr={x:[],y:[],text:[],mode:'markers+text',textposition:'top center',textfont:{size:8},
+    marker:{size:data.map(r=>Math.max(8,r.n_resp/40)),color:data.map(r=>r.color),opacity:.75,sizemode:'area',sizeref:1200},
+    type:'scatter',hovertemplate:'%{customdata.name}<br>世俗=%{x:.3f}<br>解放=%{y:.3f}<extra></extra>',customdata:[]};
+  data.forEach(r=>{tr.x.push(r.welzel_secular);tr.y.push(r.welzel_emanc);tr.text.push(r.iso3);tr.customdata.push({name:r.name_zh});});
+  Plotly.newPlot('map_scatter',[tr],{xaxis:{title:'传统→世俗 Sacred→Secular',range:[0.1,0.55]},yaxis:{title:'生存→自我表达 Survival→Emanc',range:[0.15,0.75]},
+    margin:{t:10},plot_bgcolor:'#fff'},{responsive:true});
+  const metric=document.getElementById('mapMetric').value;
+  const ml=metric.includes('secular')?'传统→世俗 Sacred→Secular':'生存→自我表达 Survival→Emanc';
+  Plotly.newPlot('map_choropleth',[{type:'choropleth',locationmode:'ISO-3',
+    locations:data.map(r=>r.iso3),z:data.map(r=>r[metric]),
+    text:data.map(r=>r.name_zh),colorscale:'RdYlBu_r',
+    marker:{line:{color:'#fff',width:.3}},colorbar:{title:ml}}],{
+    geo:{projection:{type:'natural earth'},showcoastlines:true,showland:true,landcolor:'#f0f0f0'},
+    margin:{t:0,b:0}},{responsive:true});
+}
+
+// ========== 雷达对比 ==========
+function renderRadar(){
+  const data=getData();
+  const sel=[...document.getElementById('radarSel').selectedOptions].map(o=>o.value).slice(0,6);
+  const cols=dimCols(STATE.dk);const labs=dimLabels(STATE.dk);const labsClosed=labs.concat([labs[0]]);
+  const traces=sel.map(c=>{
+    const r=data.find(x=>x.iso3===c)||D.slices.all.find(x=>x.iso3===c);
+    const vals=cols.map(co=>r[co]||0);vals.push(vals[0]);
+    return {type:'scatterpolar',r:vals,theta:labsClosed,fill:'toself',name:rName(c)+' ('+c+')',
+      line:{color:r.color},opacity:.65};
+  });
+  Plotly.newPlot('radar_plot',traces,{polar:{radialaxis:{range:[0,1]}},margin:{t:20},legend:{orientation:'h',y:-.1}},{responsive:true});
+  // 小多图
+  // 全部国家淡叠加鸟瞰(同文化圈同色)
+  const all=data;
+  const st=all.map(r=>{
+    const vals=cols.map(co=>r[co]||0);vals.push(vals[0]);
+    return {type:'scatterpolar',r:vals,theta:labsClosed,fill:'none',
+      line:{color:r.color,width:1,opacity:.32},showlegend:false,name:r.name_zh,
+      hovertemplate:r.name_zh+' ('+r.iso3+')<extra></extra>'};
+  });
+  Plotly.newPlot('radar_small',st,{polar:{radialaxis:{range:[0,1]}},margin:{t:10,b:10},height:640},{responsive:true});
+  document.getElementById('radar_small').style.height='640px';
+}
+
+// ========== 热力图 ==========
+function renderHeat(){
+  const data=getData();
+  const cols=dimCols(STATE.dk);const labs=dimLabels(STATE.dk);
+  const sort=document.getElementById('heatSort').value;
+  let sorted=[...data];
+  if(sort==='zone')sorted.sort((a,b)=>a.zone.localeCompare(b.zone)||a.name_zh.localeCompare(b.name_zh));
+  else if(sort==='mean')sorted.sort((a,b)=>(cols.reduce((s,c)=>s+(a[c]||0),0)/cols.length)-(cols.reduce((s,c)=>s+(b[c]||0),0)/cols.length)));
+  else sorted.sort((a,b)=>a.name_zh.localeCompare(b.name_zh));
+  const z=sorted.map(r=>cols.map(c=>r[c]||0));
+  const annot=[];for(let i=0;i<sorted.length;i++)for(let j=0;j<cols.length;j++){const v=z[i][j];annot.push({x:j,y:i,text:v.toFixed(2),font:{size:7,color:(v>.6||v<.35)?'#fff':'#333'},showarrow:false});}
+  Plotly.newPlot('heat_main',[{type:'heatmap',z:z,x:labs,y:sorted.map(r=>r.name_zh),colorscale:'RdYlBu_r',showscale:true,annotations:annot}],
+    {xaxis:{side:'top',tickangle:-25},margin:{t:80,l:140,b:10},height:Math.max(500,sorted.length*15)},{responsive:true});
+  document.getElementById('heat_main').style.height=Math.max(500,sorted.length*15)+'px';
+  // 文化圈均值热力
+  const zones=[...STATE.zones];const zz=zones.map(z=>{const rs=sorted.filter(r=>r.zone===z);return cols.map(c=>rs.length?rs.reduce((s,r)=>s+(r[c]||0),0)/rs.length:0);});
+  const annot2=[];for(let i=0;i<zones.length;i++)for(let j=0;j<cols.length;j++){const v=zz[i][j];annot2.push({x:j,y:i,text:v.toFixed(2),font:{size:10,color:(v>.55||v<.35)?'#fff':'#333'},showarrow:false});}
+  Plotly.newPlot('heat_zone',[{type:'heatmap',z:zz,x:labs,y:zones,colorscale:'RdYlBu_r',annotations:annot2}],{xaxis:{side:'top',tickangle:-25},margin:{t:60,l:120}},{responsive:true});
+  // 平行坐标
+  const dims=cols.map((c,idx)=>({label:labs[idx],values:sorted.map(r=>r[c]||0)}));
+  // 用 parcoords，按文化圈着色需要数值
+  const zmap={};[...STATE.zones].forEach((z,i)=>zmap[z]=i);
+  const lineColor=sorted.map(r=>zmap[r.zone]);
+  const pcscale=[...Object.entries(zmap)].sort((a,b)=>a[1]-b[1]).map(([z,i])=>[i/(Math.max(1,Object.keys(zmap).length-1)),ZCOLOR[z]]);
+  Plotly.newPlot('heat_parcoord',[{type:'parcoords',line:{color:lineColor,colorscale:pcscale,showscale:true},dimensions:dims}],{margin:{t:20,b:30},height:520},{responsive:true});
+}
+
+// ========== 国家详情 ==========
+function renderCountry(){
+  const data=getData();
+  const iso=document.getElementById('countrySel').value;
+  const r=data.find(x=>x.iso3===iso)||D.slices.all.find(x=>x.iso3===iso);
+  // 双雷达 D+J
+  const dCols=D.dimConfig.D.order,jCols=D.dimConfig.J.order;
+  const dLab=dCols.map(c=>DIM_LABEL[c]+'\n'+c),jLab=jCols.map(c=>DIM_LABEL[c]+'\n'+c);
+  const dv=dCols.map(c=>r[c]||0);dv.push(dv[0]);dLab.push(dLab[0]);
+  const jv=jCols.map(c=>r[c]||0);jv.push(jv[0]);jLab.push(jLab[0]);
+  Plotly.newPlot('c_radar',[
+    {type:'scatterpolar',r:dv,theta:dLab,fill:'toself',name:'场域D',line:{color:'#2E5C8A'},opacity:.6},
+    {type:'scatterpolar',r:jv,theta:jLab,fill:'toself',name:'判断J',line:{color:'#C0504D'},opacity:.6}
+  ],{polar:{radialaxis:{range:[0,1]}},margin:{t:20},legend:{orientation:'h',y:-.1}},{responsive:true});
+  // 位置
+  const bg=data.map(x=>({x:[x.welzel_secular],y:[x.welzel_emanc],mode:'markers',marker:{size:9,color:x.color,opacity:.4},showlegend:false,type:'scatter',hoverinfo:'skip'}));
+  Plotly.newPlot('c_pos',[...bg,{x:[r.welzel_secular],y:[r.welzel_emanc],mode:'markers+text',text:[r.name_zh],textposition:'top center',marker:{size:18,color:'#000',symbol:'star-dot'},showlegend:false,type:'scatter'}],{xaxis:{title:'传统→世俗',range:[0.1,0.55]},yaxis:{title:'生存→自我表达',range:[0.15,0.75]},margin:{t:10},showlegend:false},{responsive:true});
+  // 表
+  const rows=dCols.map(c=>`<tr><td>${DIM_LABEL[c]}</td><td>${c}</td><td>${(r['dim_'+c]||0).toFixed(3)}</td><td>场域D</td></tr>`).join('')
+    +jCols.map(c=>`<tr><td>${DIM_LABEL[c]}</td><td>${c}</td><td>${(r['dim_'+c]||0).toFixed(3)}</td><td>判断J</td></tr>`).join('');
+  document.getElementById('c_table').innerHTML=`<h3 style="color:#2E5C8A;font-size:15px">维度分值明细 ${r.name_zh} (${iso}) · 文化圈${r.zone} · 受访者${r.n_resp.toLocaleString()}</h3><table><tr><th>维度</th><th>代码</th><th>分值(0-1)</th><th>类别</th></tr>${rows}</table>`;
+}
+
+// ========== 题项级 ==========
+function renderItem(){
+  const q=document.getElementById('itemSel').value;
+  const it=D.items.find(x=>x.variable===q);if(!it)return;
+  const vals=Object.entries(it.values).filter(([k,v])=>v!=null);
+  // 用全切片(全部)的国家名
+  const data=D.slices.all;
+  const rows=vals.map(([iso,v])=>{const r=data.find(x=>x.iso3===iso);return {iso,name:r?r.name_zh:iso,zone:r?r.zone:'',val:v};});
+  rows.sort((a,b)=>a.val-b.val);
+  Plotly.newPlot('item_bar',[{type:'bar',orientation:'h',y:rows.map(r=>r.name),x:rows.map(r=>r.val),
+    marker:{color:rows.map(r=>ZCOLOR[r.zone]||'#888')},hovertemplate:'%{y}<br>均值=%{x:.3f}<extra></extra>'}],
+    {margin:{t:10,l:120,b:40},xaxis:{title:'归一化均值(0-1)',range:[0,1]},height:Math.max(500,rows.length*15)},{responsive:true});
+  document.getElementById('item_bar').style.height=Math.max(500,rows.length*15)+'px';
+  // 关联理论
+  const J=it.J,Dc=it.D;
+  const cands=D.theories.filter(t=>t.jodcv&&t.jodcv.indexOf(J)>=0&&t.jodcv.indexOf(Dc)>=0);
+  let html=`<h3 style="color:#2E5C8A;font-size:15px;margin-top:18px">该题可能支撑的中层理论（J=${J}, D=${Dc}）</h3>`;
+  if(!cands.length)html+='<p class="muted">该题 J/D 组合未直接命中已注册理论。</p>';
+  cands.forEach(t=>{html+=`<div class="theory"><span class="tid">${t.id} ${t.name}</span> <span class="sec">(${t.section})</span><div class="m">${t.mechanism}</div></div>`;});
+  document.getElementById('item_theory').innerHTML=html;
+}
+
+// ========== 编码体系 ==========
+function renderCode(){
+  Plotly.newPlot('code_j',[{type:'bar',orientation:'h',y:D.composition.J.map(c=>c.label),x:D.composition.J.map(c=>c.n),text:D.composition.J.map(c=>c.n),textposition:'outside'}],{margin:{t:10,l:80,b:30},title:'判断类型 J'},{responsive:true});
+  Plotly.newPlot('code_d',[{type:'bar',orientation:'h',y:D.composition.D.map(c=>c.label),x:D.composition.D.map(c=>c.n),text:D.composition.D.map(c=>c.n),textposition:'outside'}],{margin:{t:10,l:100,b:30},title:'场域 D'},{responsive:true});
+  const sec=document.getElementById('codeSec').value;
+  const list=sec==='全部'?D.theories:D.theories.filter(t=>t.section===sec);
+  let html='';list.forEach(t=>{html+=`<div class="theory"><span class="tid">${t.id}　${t.name}</span> <span class="sec">(${t.section} · 来源${t.source})</span><div class="m"><b>核心机制：</b>${t.mechanism}</div><div class="m muted"><b>预期入口：</b>${t.jodcv}</div><div class="m muted"><b>证据/反证：</b>${t.evidence}</div></div>`;});
+  document.getElementById('code_theory').innerHTML=html;
+}
+
+function render(){
+  if(STATE.tab==='overview')renderOverview();
+  else if(STATE.tab==='map')renderMap();
+  else if(STATE.tab==='radar')renderRadar();
+  else if(STATE.tab==='heat')renderHeat();
+  else if(STATE.tab==='country')renderCountry();
+  else if(STATE.tab==='item')renderItem();
+  else if(STATE.tab==='code')renderCode();
+}
+initControls();render();
+</script>
+</body>
+</html>
