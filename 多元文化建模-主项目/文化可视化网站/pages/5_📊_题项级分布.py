@@ -9,7 +9,7 @@ import pandas as pd, numpy as np
 import utils
 from utils import (load_respondent_dims, load_item_meta, load_item_means,
                    render_sidebar, name_zh, ZONES, ZONE_COLOR, question_text,
-                   load_theory)
+                   load_theory, O_ORDER, O_ZH)
 
 st.set_page_config(page_title="题项级分布", page_icon="📊", layout="wide")
 st.title("📊 题项级跨国分布 Item-level Distribution")
@@ -20,14 +20,24 @@ zones = ctx["zones"]; demo = ctx["demo"]
 rd = load_respondent_dims()
 im = load_item_meta()
 
+# O 筛选器（按对象类型筛选题项）
+o_filter = st.selectbox(
+    "按对象 O 筛选 Filter by Object",
+    ["全部 All"] + [f"{o} | {O_ZH.get(o,o)}" for o in O_ORDER],
+    index=0
+)
+o_sel = None if o_filter.startswith("全部") else o_filter.split(" | ")[0]
+
 # 题项选择
-content_q = im[~im["J_code"].isin(["—",None])][["variable","atomic_proposition","J_code","D_primary"]].copy()
+content_q = im[~im["J_code"].isin(["—",None])][["variable","atomic_proposition","J_code","D_primary","O_primary"]].copy()
+if o_sel:
+    content_q = content_q[content_q["O_primary"]==o_sel]
 content_q["label"] = content_q["variable"] + " | " + content_q["atomic_proposition"].astype(str).str.slice(0,30)
 qsel = st.selectbox("选择题项 Select item",
                     content_q["variable"].tolist(),
                     format_func=lambda q: f"{q} | {question_text(q)[:40]}")
 qrow = content_q[content_q["variable"]==qsel].iloc[0]
-st.markdown(f"**题项**：`{qsel}`　|　**命题**：{question_text(qsel)}　|　**编码**：{qrow['J_code']} / {qrow['D_primary']}")
+st.markdown(f"**题项**：`{qsel}`　|　**命题**：{question_text(qsel)}　|　**编码**：J={qrow['J_code']} / D={qrow['D_primary']} / O={qrow['O_primary']}")
 
 # 读取该题原始分布：从打包的 item_raw.parquet 取列（云端无需 200MB WVS CSV）
 @st.cache_data
@@ -94,11 +104,11 @@ st.caption(f"图按各国均值升序排列。原始量表值见题项原始编�
 st.divider()
 st.subheader("🔗 该题可能支撑的中层理论")
 th = load_theory()
-J = qrow["J_code"]; D = qrow["D_primary"]
-# 找JODCV里含该J和D的理论
+J = qrow["J_code"]; D = qrow["D_primary"]; O = qrow["O_primary"]
+# 找JODCV里含该J、D、O 的理论
 def match(t):
     s = str(t.get("JODCV_entry_S_form",""))
-    return (J in s) and (D in s)
+    return (J in s) and (D in s) and (O in s)
 cand = th[th.apply(match, axis=1)]
 if len(cand):
     for _, r in cand.iterrows():

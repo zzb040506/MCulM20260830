@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import openpyxl
 
-BASE = "/Users/f.fantasiachopin/Documents/UCAS博士文件夹/Project/多元文化建模20260830"
+BASE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # 项目根 多元文化建模20260830
 PROJ = os.path.join(BASE, "多元文化建模-主项目")
 WVS_CSV = os.path.join(BASE, "WVS-7数据集", "WVS_Cross-National_Wave_7_inverted_csv_v6_0.csv")
 OUT = os.path.join(PROJ, "文化可视化网站", "data")
@@ -25,6 +25,16 @@ D_ZH = {"D-FI":"家庭","D-CR":"社区","D-RS":"宗教","D-PL":"政治法律","D
         "D-KT":"教育知识","D-MC":"媒介文化","D-HC":"健康身体"}
 J_ZH = {"J-CM":"分类","J-AC":"属性因果","J-ER":"评价排序","J-NO":"规范应然",
         "J-RA":"关系分配","J-RI":"表征认同"}
+# O 对象：按语义编号表顺序，仅保留实际在 O_primary 出现过的 14 个代码
+O_ZH = {"O-GC":"性别身份 Gender","O-SF":"性/家庭形式 Sex&Family","O-AG":"年龄世代 Age",
+        "O-SP":"社会经济位置 Socioecon","O-RE":"种族族群 Race","O-NM":"国族迁移 Nation&Migr",
+        "O-RS":"宗教世俗身份 Religious","O-LG":"语言群体 Language","O-BH":"身体健康 Body&Health",
+        "O-FR":"家庭角色 Family Roles","O-ST":"社会关系 Social Ties","O-AR":"权威角色 Authority",
+        "O-GP":"群体公众 Groups","O-OI":"组织机构 Org&Inst","O-PL":"实践生活方式 Practices",
+        "O-RP":"规则政策 Rules","O-KT":"知识技术 Knowledge&Tech","O-MSW":"媒介符号 Media",
+        "O-OSN":"物空自然 Objects&Space","O-OPEN":"开放对象 Open Object"}
+O_ORDER = ["O-GC","O-SF","O-SP","O-NM","O-RS","O-BH","O-FR","O-ST",
+           "O-AR","O-GP","O-OI","O-PL","O-RP","O-KT"]
 D_ORDER = ["D-FI","D-CR","D-RS","D-PL","D-WO","D-KT","D-MC","D-HC"]
 J_ORDER = ["J-CM","J-AC","J-ER","J-NO","J-RA","J-RI"]
 
@@ -53,7 +63,7 @@ def main():
     assert enc["wvs_col"].notna().all(), enc[enc["wvs_col"].isna()]
     print(f"   290题全部映射成功，{len(enc)}题")
 
-    # 仅取内容编码题（J/D 非 —）
+    # 仅取内容编码题（J/D/O 非 —）
     content = enc[~enc["J_code"].isin(["—", None]) & ~enc["D_primary"].isin(["—", None, "OPEN-PROVISIONAL"])].copy()
     print(f"   内容编码题 {len(content)}/{len(enc)}（去—与provisional）")
 
@@ -96,6 +106,14 @@ def main():
         if cols:
             df["dim_" + j] = df[cols].mean(axis=1, skipna=True)
             dim_cols.append("dim_" + j)
+    # O 对象维度聚合（按 O_primary）
+    for o in O_ORDER:
+        sub = content[content["O_primary"] == o]
+        cols = [c + "__n" for c in sub["wvs_col"]]
+        cols = [c for c in cols if c in df.columns]
+        if cols:
+            df["dim_" + o] = df[cols].mean(axis=1, skipna=True)
+            dim_cols.append("dim_" + o)
     print(f"   生成维度列: {dim_cols}")
 
     print("⑤ 处理人口学与Welzel指数...")
@@ -147,8 +165,8 @@ def main():
     dmap = dict(zip(enc["variable"], enc["D_primary"]))
     item.to_parquet(os.path.join(OUT, "item_means.parquet"), index=False)
     # 题项元数据单独存
-    item_meta = enc[["variable", "wvs_col", "atomic_proposition", "J_code", "D_primary",
-                     "C_codes", "V_primary_direction", "review_status"]].copy()
+    item_meta = enc[["variable", "wvs_col", "atomic_proposition", "J_code", "O_primary",
+                     "D_primary", "C_codes", "V_primary_direction", "review_status"]].copy()
     item_meta.to_parquet(os.path.join(OUT, "item_meta.parquet"), index=False)
     print(f"   item_means.parquet: {item.shape}, item_meta.parquet: {item_meta.shape}")
 

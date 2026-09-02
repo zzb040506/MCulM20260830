@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 import pandas as pd, numpy as np
 import utils
 from utils import (load_item_meta, load_theory, load_country_summary, render_sidebar,
-                   D_ORDER, J_ORDER, D_ZH, J_ZH)
+                   D_ORDER, J_ORDER, O_ORDER, D_ZH, J_ZH, O_ZH)
 
 st.set_page_config(page_title="编码体系", page_icon="📐", layout="wide")
 st.title("📐 编码体系：290题如何归约到文化图式")
@@ -40,13 +40,14 @@ st.subheader("各维度题项构成 Item composition per dimension")
 from collections import Counter
 cJ = Counter(im["J_code"])
 cD = Counter(im["D_primary"])
-c1, c2 = st.columns(2)
+cO = Counter(im["O_primary"])
+c1, c2, c3 = st.columns(3)
 with c1:
     df = pd.DataFrame([(k,v) for k,v in cJ.items() if k not in ("—",None)],
                       columns=["code","n"]).sort_values("n",ascending=True)
     df["label"] = df["code"].map(lambda k: J_ZH.get(k,k))
     fig = px.bar(df, x="n", y="label", orientation="h", text="n",
-                 labels={"n":"题项数","label":""}, height=360)
+                 labels={"n":"题项数","label":""}, height=420)
     fig.update_layout(template="plotly_white")
     st.plotly_chart(fig, use_container_width=True)
     st.caption("判断类型 J Judgment")
@@ -55,10 +56,19 @@ with c2:
                       columns=["code","n"]).sort_values("n",ascending=True)
     df["label"] = df["code"].map(lambda k: D_ZH.get(k,k))
     fig = px.bar(df, x="n", y="label", orientation="h", text="n",
-                 labels={"n":"题项数","label":""}, height=360)
+                 labels={"n":"题项数","label":""}, height=420)
     fig.update_layout(template="plotly_white")
     st.plotly_chart(fig, use_container_width=True)
     st.caption("场域 D Domain")
+with c3:
+    df = pd.DataFrame([(k,v) for k,v in cO.items() if k not in ("—",None,"OPEN-PROVISIONAL")],
+                      columns=["code","n"]).sort_values("n",ascending=True)
+    df["label"] = df["code"].map(lambda k: O_ZH.get(k,k))
+    fig = px.bar(df, x="n", y="label", orientation="h", text="n",
+                 labels={"n":"题项数","label":""}, height=420)
+    fig.update_layout(template="plotly_white")
+    st.plotly_chart(fig, use_container_width=True)
+    st.caption("对象 O Object (14个有题项的代码)")
 
 st.divider()
 
@@ -80,3 +90,32 @@ for _, r in show.iterrows():
 
 st.divider()
 st.caption("注：本编码体系单题只作指标；结构判断须基于多题联合分布。详见主项目 `国家文化知识建模_*` 系列表。")
+
+# --- S 结构代码参考 ---
+st.divider()
+st.subheader("跨命题文化结构 S Structures (理论级)")
+st.markdown("""
+S 代码不是题项级，而是 **跨命题/理论级**：用于描述 34 条中层理论所涉及的「文化结构类型」。
+每个理论的 `JODCV_entry_S_form` 字段中标注其涉及的 S 代码（及 J/O/D/C 代码共现关系）。
+详见「S-JOD 共现网络」页。
+""")
+S_ZH = {
+    "S-CB": "类别与边界 Classification & Boundaries — 类别之间的成员资格、亲疏、地位、排斥与跨界关系",
+    "S-SC": "图式 Schemas — 多个概念或命题构成、可由线索激活的关系网络",
+    "S-FR": "框架 Frames — 围绕问题、原因、道德评价和解决方案形成的选择性组织",
+    "S-BC": "二元代码 Binary Codes — 成组对立概念、价向及其对象映射",
+    "S-NA": "叙事 Narratives — 角色、时间、因果与情节组织",
+    "S-DR": "话语与复现 Discourses & Repertoires — 围绕议题形成的竞争立场、理由和表达资源",
+    "S-GE": "体裁 Genres — 反复交往情境中的形式惯例、预期受众和适当言语行动",
+}
+S_ORDER = ["S-CB","S-SC","S-FR","S-BC","S-NA","S-DR","S-GE"]
+sdf = pd.DataFrame([(k, v.split(" — ")[0], v.split(" — ")[1] if " — " in v else "") for k,v in S_ZH.items()],
+                   columns=["代码 code","英文名 en","定义 definition"])
+st.dataframe(sdf, use_container_width=True, hide_index=True)
+
+# --- O 对象代码参考 ---
+st.subheader("对象 O 代码参考 Object codes reference")
+st.markdown("以下为 O 的 14 个有题项覆盖的代码（语义表共 20 个，余下 6 个未在本批 290 题作为 primary 出现）：")
+odf = pd.DataFrame([(o, O_ZH.get(o,o).split(" ")[0], O_ZH.get(o,o)) for o in O_ORDER],
+                   columns=["代码 code","关键词 key","中英对照 label"])
+st.dataframe(odf, use_container_width=True, hide_index=True)

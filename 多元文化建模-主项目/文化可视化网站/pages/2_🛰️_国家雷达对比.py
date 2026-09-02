@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd, numpy as np
 import utils
-from utils import (render_sidebar, country_summary_filtered, DIMS, D_ORDER, J_ORDER,
+from utils import (render_sidebar, country_summary_filtered, DIMS, D_ORDER, J_ORDER, O_ORDER,
                    ZONE_COLOR, name_zh, ZONES)
 
 st.set_page_config(page_title="国家雷达对比", page_icon="🛰️", layout="wide")
@@ -19,7 +19,7 @@ zones = ctx["zones"]; demo = ctx["demo"]; kind = ctx["dim_kind"]
 cs = country_summary_filtered(demo)
 cs = cs[cs["zone"].isin(zones)] if zones else cs
 
-order = D_ORDER if kind=="D" else J_ORDER
+order = D_ORDER if kind=="D" else J_ORDER if kind=="J" else O_ORDER
 labels = [f"{utils.fmt_dim(c, kind).split(' ')[0]}\n{c}" for c in order]
 dim_cols = [f"dim_{c}" for c in order]
 

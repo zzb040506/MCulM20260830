@@ -7,7 +7,7 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd, numpy as np
 import utils
-from utils import (render_sidebar, country_summary_filtered, DIMS, D_ORDER, J_ORDER,
+from utils import (render_sidebar, country_summary_filtered, DIMS, D_ORDER, J_ORDER, O_ORDER,
                    name_zh, ZONES, ZONE_COLOR, ZONE_EN)
 
 st.set_page_config(page_title="平行坐标", page_icon="🧵", layout="wide")
@@ -18,7 +18,7 @@ zones = ctx["zones"]; demo = ctx["demo"]; kind = ctx["dim_kind"]
 cs = country_summary_filtered(demo)
 cs = cs[cs["zone"].isin(zones)] if zones else cs
 
-order = D_ORDER if kind=="D" else J_ORDER
+order = D_ORDER if kind=="D" else J_ORDER if kind=="J" else O_ORDER
 dim_cols = [f"dim_{c}" for c in order]
 labels = {dc: utils.fmt_dim(c, kind) for dc, c in zip(dim_cols, order)}
 

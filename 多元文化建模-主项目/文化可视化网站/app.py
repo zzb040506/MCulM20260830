@@ -58,7 +58,8 @@ st.caption("气泡=国家，大小=受访者数，颜色=文化圈。左下=传�
 # 总览图2：各文化圈维度均值条形
 st.subheader("📊 各文化圈维度均值 Dimension means by cultural zone")
 kind = ctx["dim_kind"]
-dim_cols = [f"dim_{c}" for c in (__import__('utils').D_ORDER if kind=="D" else __import__('utils').J_ORDER)]
+_u = __import__('utils')
+dim_cols = [f"dim_{c}" for c in (_u.D_ORDER if kind=="D" else _u.J_ORDER if kind=="J" else _u.O_ORDER)]
 zmean = cs.groupby("zone")[dim_cols].mean().reset_index()
 zmean = zmean.melt(id_vars="zone", var_name="dim", value_name="score")
 zmean["dim"] = zmean["dim"].str.replace("dim_","")
@@ -67,7 +68,7 @@ fig2 = px.bar(zmean, x="dim", y="score", color="zone", barmode="group",
               height=420)
 fig2.update_layout(template="plotly_white", xaxis_tickangle=-30)
 st.plotly_chart(fig2, use_container_width=True)
-st.caption(f"维度集：{__import__('utils').DIMS[kind][0]}。可于侧边栏切换 D/J。")
+st.caption(f"维度集：{_u.DIMS[kind][0]}。可于侧边栏切换 D/J/O。")
 
 st.divider()
 st.markdown("**下一步**：从左侧导航选择页面，深入查看 文化地图 / 雷达对比 / 热力图 / 平行坐标 / 题项级 / 国家详情 / 编码体系。")
